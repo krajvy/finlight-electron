@@ -54,10 +54,13 @@ const useImportTransactions = (account: Account) => {
         }) as string[][];
 
         const dateIndex = preset.fields.indexOf('Date');
-        const descriptionIndex = preset.fields.indexOf('Description');
 
         const transactions = records.map((record) => {
-          const description = record[descriptionIndex] || '';
+          const description = getMultipleFieldValues(
+            record,
+            preset,
+            'Description',
+          );
           const amount = parseNumericField(record, preset, 'Amount');
           const fee = parseNumericField(record, preset, 'Fee');
           const deposit = parseNumericField(record, preset, 'Deposit');
@@ -147,4 +150,27 @@ const parseDate = (dateStr: string, dateFormat: string) => {
       date.getMilliseconds(),
     ),
   );
+};
+
+const getMultipleFieldValues = (
+  record: string[],
+  preset: CSVImportPreset,
+  fieldName: CSVImportField,
+  concatString = '; ',
+): string => {
+  const fieldNameIndexes = preset.fields
+    .map((field, index) => (field === fieldName ? index : false))
+    .filter((field) => field) as number[];
+
+  const fieldValues: string[] = [];
+
+  if (fieldNameIndexes.length > 0) {
+    fieldNameIndexes.forEach((fieldNameIndex) => {
+      if (record[fieldNameIndex]?.trim() !== '') {
+        fieldValues.push(record[fieldNameIndex]);
+      }
+    });
+  }
+
+  return fieldValues.join(concatString);
 };
